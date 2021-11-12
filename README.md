@@ -1,4 +1,4 @@
-# VATSIM Live Feedback
+# <img src="https://raw.githubusercontent.com/frankebersoll/vatsim-live-feedback/main/src/Client/public/FeedbackLogo.png" width="100" height="100"> VATSIM Live Feedback
 
 This project aims to provide an interactive and easy-to-use way for giving feedback to each other
 while flying online in the VATSIM network.
