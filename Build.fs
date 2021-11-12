@@ -1,5 +1,6 @@
 open Fake.Core
 open Fake.IO
+open Fake.IO.FileSystemOperators
 open Farmer
 open Farmer.Builders
 
@@ -7,6 +8,7 @@ open Helpers
 
 initializeContext()
 
+let root = __SOURCE_DIRECTORY__
 let sharedPath = Path.getFullName "src/Shared"
 let serverPath = Path.getFullName "src/Server"
 let clientPath = Path.getFullName "src/Client"
@@ -17,14 +19,14 @@ let clientTestsPath = Path.getFullName "tests/Client"
 
 Target.create "Clean" (fun _ ->
     Shell.cleanDir deployPath
-    run dotnet "fable clean --yes" clientPath // Delete *.fs.js files created by Fable
+    Shell.cleanDir (clientPath @@ "output")
 )
 
-Target.create "InstallClient" (fun _ -> run npm "install" ".")
+Target.create "InstallClient" (fun _ -> run yarn "install" root)
 
 Target.create "Bundle" (fun _ ->
     [ "server", dotnet $"publish -c Release -o \"{deployPath}\"" serverPath
-      "client", dotnet "fable -o output -s --run webpack -p" clientPath ]
+      "client", yarn "bundle" root]
     |> runParallel
 )
 
@@ -46,7 +48,7 @@ Target.create "Azure" (fun _ ->
 Target.create "Run" (fun _ ->
     run dotnet "build" sharedPath
     [ "server", dotnet "watch run" serverPath
-      "client", dotnet "fable watch -o output -s --run webpack-dev-server" clientPath ]
+      "client", yarn "start" root ]
     |> runParallel
 )
 

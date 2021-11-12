@@ -45,13 +45,14 @@ open Feliz
 open Feliz.Bulma
 
 let navBrand =
+    let icon = Client.HtmlHelpers.importImage "./public/favicon.png"
     Bulma.navbarBrand.div [
         Bulma.navbarItem.a [
             prop.href "https://safe-stack.github.io/"
             navbarItem.isActive
             prop.children [
                 Html.img [
-                    prop.src "/favicon.png"
+                    prop.src icon
                     prop.alt "Logo"
                 ]
             ]
