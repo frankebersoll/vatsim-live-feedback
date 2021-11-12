@@ -1,6 +1,7 @@
 module Index
 
 open Elmish
+open Fable.React
 open Fable.Remoting.Client
 open Shared
 
@@ -45,7 +46,7 @@ open Feliz
 open Feliz.Bulma
 
 let navBrand =
-    let icon = Client.HtmlHelpers.importImage "./public/favicon.png"
+    let icon = Client.HtmlHelpers.importImage "./public/FeedbackLogo.png"
     Bulma.navbarBrand.div [
         Bulma.navbarItem.a [
             prop.href "https://safe-stack.github.io/"
@@ -93,14 +94,17 @@ let containerBox (model: Model) (dispatch: Msg -> unit) =
     ]
 
 let view (model: Model) (dispatch: Msg -> unit) =
+    let reactProperty =
+        prop.style [
+            style.backgroundSize "cover"
+            style.backgroundImageUrl (Client.HtmlHelpers.importImage "./public/background.jpg")
+            style.backgroundPosition "no-repeat center center fixed"
+        ]
+
     Bulma.hero [
         hero.isFullHeight
         color.isPrimary
-        prop.style [
-            style.backgroundSize "cover"
-            style.backgroundImageUrl "https://unsplash.it/1200/900?random"
-            style.backgroundPosition "no-repeat center center fixed"
-        ]
+        reactProperty
         prop.children [
             Bulma.heroHead [
                 Bulma.navbar [
