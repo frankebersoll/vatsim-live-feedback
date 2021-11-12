@@ -2,5 +2,4 @@ module Client.HtmlHelpers
 
 open Fable.Core.JsInterop
 
-let inline importImage path : string =
-    importDefault path
+let inline imageUrl path : string = importDefault path

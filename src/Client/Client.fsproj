@@ -8,11 +8,15 @@
         <None Include="index.html" />
         <None Include="paket.references" />
         <Compile Include="HtmlHelpers.fs" />
+        <Compile Include="Interaction.fs" />
         <Compile Include="Index.fs" />
         <Compile Include="App.fs" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Shared\Shared.fsproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <Content Include="Styles.scss" />
     </ItemGroup>
     <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

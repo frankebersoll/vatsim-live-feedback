@@ -6,10 +6,11 @@
         "bundle": "dotnet fable --cwd src/Client -o output --run parcel build index.html --dist-dir ../../deploy/public"
     },
     "devDependencies": {
+        "@parcel/transformer-sass": "^2.0.1",
         "http-proxy-middleware": "^2.0.1",
         "parcel": "^2.0.1",
-        "react": "^16.10.2",
-        "react-dom": "^16.10.2"
+        "react": "^17.0.2",
+        "react-dom": "^17.0.2"
     },
     "packageManager": "yarn@3.1.0"
 }
