@@ -12,6 +12,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     environment: test
+    env:
+      SHOULD_DEPLOY: ${{ github.ref == 'refs/heads/main' }}
     
     steps:
       - uses: actions/checkout@v2
@@ -30,9 +32,9 @@ jobs:
 
       - name: Azure Login
         uses: Azure/login@v1.4.0
-        if: github.ref == 'refs/heads/main'
+        if: env.SHOULD_DEPLOY
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Build / Deploy
-        run: dotnet run -- {{ github.ref == 'refs/heads/main' && 'azure' || 'bundle' }}
+      - name: ${{ env.SHOULD_DEPLOY && 'Deploy' || 'Build' }}
+        run: dotnet run -- ${{ env.SHOULD_DEPLOY && 'azure' || 'bundle' }}
