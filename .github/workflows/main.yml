@@ -30,8 +30,9 @@ jobs:
 
       - name: Azure Login
         uses: Azure/login@v1.4.0
+        if: github.ref == 'refs/heads/main'
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Bundle
-        run: dotnet run -- azure
+      - name: Build / Deploy
+        run: dotnet run -- {{ github.ref == 'refs/heads/main' && 'azure' || 'bundle' }}
