@@ -5,44 +5,33 @@ open Fable.Remoting.Giraffe
 open Saturn
 
 open Shared
+open Shared.Model
 
-type Storage() =
-    let todos = ResizeArray<_>()
+let store = Model.Store.create ()
 
-    member __.GetTodos() = List.ofSeq todos
+let meetingsApi =
 
-    member __.AddTodo(todo: Todo) =
-        if Todo.isValid todo.Description then
-            todos.Add todo
-            Ok()
-        else
-            Error "Invalid todo"
+    let getMeetings callSign =
+        async {
+            let meetings = store.GetMeetings(callSign)
 
-let storage = Storage()
+            let infos =
+                meetings
+                |> List.map
+                    (fun m ->
+                        { MeetingInfo.Start = m.Start
+                          Name = m.Name
+                          CallSign = m.TargetId.CallSign })
 
-storage.AddTodo(Todo.create "Create new SAFE project")
-|> ignore
+            return infos
+        }
 
-storage.AddTodo(Todo.create "Write your app")
-|> ignore
-
-storage.AddTodo(Todo.create "Ship it !!!")
-|> ignore
-
-let todosApi =
-    { getTodos = fun () -> async { return storage.GetTodos() }
-      addTodo =
-          fun todo ->
-              async {
-                  match storage.AddTodo todo with
-                  | Ok () -> return todo
-                  | Error e -> return failwith e
-              } }
+    { GetMeetings = getMeetings }
 
 let webApp =
     Remoting.createApi ()
     |> Remoting.withRouteBuilder Route.builder
-    |> Remoting.fromValue todosApi
+    |> Remoting.fromValue meetingsApi
     |> Remoting.buildHttpHandler
 
 let app =

@@ -2,20 +2,31 @@ namespace Shared
 
 open System
 
-type Todo = { Id: Guid; Description: string }
+module Model =
 
-module Todo =
-    let isValid (description: string) =
-        String.IsNullOrWhiteSpace description |> not
+    [<Struct>]
+    type Cid = Cid of int
 
-    let create (description: string) =
-        { Id = Guid.NewGuid()
-          Description = description }
+    [<Struct>]
+    type CallSign =
+        private
+        | CallSign of string
+        override this.ToString() =
+            match this with
+            | CallSign callSign -> callSign
+        static member FromString(s: string) =
+            CallSign (s.ToUpper())
+
+    type CallerId = { Cid: Cid; CallSign: CallSign }
+
+    type MeetingInfo =
+        { CallSign: CallSign
+          Name: string
+          Start: DateTimeOffset }
 
 module Route =
     let builder typeName methodName =
         sprintf "/api/%s/%s" typeName methodName
 
-type ITodosApi =
-    { getTodos: unit -> Async<Todo list>
-      addTodo: Todo -> Async<Todo> }
+type IMeetingsApi =
+    { GetMeetings: Model.CallSign -> Async<Model.MeetingInfo list> }

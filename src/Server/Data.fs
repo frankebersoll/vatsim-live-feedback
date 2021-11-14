@@ -1,6 +1,7 @@
 module Server.Data
 
 open FSharp.Data
+open Shared.Model
 
 let vatsimDataUri =
     "https://data.vatsim.net/v3/vatsim-data.json"
@@ -11,17 +12,8 @@ let transceiversDataUri =
 type VatsimData = JsonProvider<"ExampleData/VatsimData.json">
 type TransceiversData = JsonProvider<"ExampleData/TransceiversData.json">
 
-[<Struct>]
-type Cid = Cid of int
-
-[<Struct>]
-type CallSign = CallSign of string
-
-type CallerId = { Cid: Cid; CallSign: CallSign }
-
-let callerId cid callSign =
-    { Cid = Cid cid
-      CallSign = CallSign callSign }
+type UserInfo = { CallerId: CallerId; Name: string }
+let userInfo callerId name = { CallerId = callerId; Name = name }
 
 type MeetingKey =
     { Pilot: CallerId
@@ -31,6 +23,10 @@ type MeetingKey =
 type encodedVhf
 
 let encodedVhf i = i * 1<encodedVhf>
+
+let callerId cid callSign =
+    { Cid = Cid cid
+      CallSign = CallSign.FromString callSign }
 
 type VatsimData.Controller with
     member this.CallerId = callerId this.Cid this.Callsign
@@ -65,7 +61,7 @@ let loadCurrentStateAsync () =
             transceiversData
             |> Seq.map
                 (fun coms ->
-                    CallSign coms.Callsign,
+                    CallSign.FromString coms.Callsign,
                     (coms.Transceivers
                      |> Array.map (fun com -> encodedVhf com.Frequency)))
             |> Map.ofSeq
@@ -75,12 +71,23 @@ let loadCurrentStateAsync () =
               Frequencies = frequenciesByCallSign }
     }
 
+let getUsers (state: VatsimState) =
+    let pilots =
+        state.VatsimData.Pilots
+        |> Seq.map (fun p -> userInfo (callerId p.Cid p.Callsign) p.Name)
+
+    let controllers =
+        state.VatsimData.Controllers
+        |> Seq.map (fun c -> userInfo (callerId c.Cid c.Callsign) c.Name)
+
+    pilots |> Seq.append controllers |> List.ofSeq
+
 let getMeetings (state: VatsimState) =
 
     let controllers =
         query {
             for controller in state.VatsimData.Controllers do
-                let callSign = CallSign controller.Callsign
+                let callSign = CallSign.FromString controller.Callsign
                 let frequencies = state |> getFrequencies callSign
 
                 for frequency in frequencies do
@@ -91,7 +98,7 @@ let getMeetings (state: VatsimState) =
     let meetings =
         query {
             for pilot in state.VatsimData.Pilots do
-                let callSign = CallSign pilot.Callsign
+                let callSign = CallSign.FromString pilot.Callsign
 
                 let com1Frequency =
                     state |> getFrequencies callSign |> Array.tryHead

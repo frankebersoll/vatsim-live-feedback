@@ -3,12 +3,14 @@ namespace Server.Model
 open System
 open System.Collections.Generic
 open Server.Data
+open Shared.Model
 
 module History =
 
     type MeetingItem =
         { Key: MeetingKey
           TargetId: CallerId
+          Name: string
           Start: DateTimeOffset }
 
     type private MeetingHistoryItem =
@@ -28,12 +30,14 @@ module History =
         private
             { Meetings: MeetingHistoryDict
               Pending: MeetingHistoryDict
-              ByCid: Dictionary<Cid, MeetingItem list> }
+              ByCid: Dictionary<Cid, MeetingItem list>
+              mutable VatsimState: VatsimState option }
 
     let create () =
         { Meetings = Dictionary()
           Pending = Dictionary()
-          ByCid = Dictionary() }
+          ByCid = Dictionary()
+          VatsimState = None }
 
     type MeetingHistoryUpdate =
         { Added: MeetingKey list
@@ -44,18 +48,28 @@ module History =
         | true, meetings -> meetings
         | _ -> []
 
-    let getCids (history: MeetingHistory) = history.ByCid.Keys |> Seq.toList
+    let getByCallSign (callSign: CallSign) (history: MeetingHistory) =
+        history.VatsimState
+        |> Option.bind (fun state ->
+            state
+            |> getUsers
+            |> List.tryFind (fun user -> user.CallerId.CallSign = callSign))
+        |> Option.map (fun user -> history |> get user.CallerId.Cid)
+        |> Option.defaultValue []
 
-    let update (meetings: MeetingKey seq) (now: DateTimeOffset) (maxAge: TimeSpan) (history: MeetingHistory) =
+    let update (state: VatsimState) (now: DateTimeOffset) (maxAge: TimeSpan) (history: MeetingHistory) =
 
         let historyMeetings = history.Meetings
         let pending = history.Pending
         let byCid = history.ByCid
 
+        let users = state |> getUsers |> Seq.map (fun u -> u.CallerId, u) |> readOnlyDict
+
         let addForCid (cid: Cid) (target: CallerId) (item: MeetingHistoryItem) =
             let item =
                 { MeetingItem.Key = item.Key
                   TargetId = target
+                  Name = users.[target].Name
                   Start = item.Start }
 
             match byCid.TryGetValue(cid) with
@@ -87,7 +101,7 @@ module History =
             removeForCid item.Key.Pilot.Cid item.Key
 
         let additions =
-            [ for key in meetings do
+            [ for key in getMeetings state do
                   match historyMeetings.TryGetValue(key) with
                   | true, item -> item.Ping now
                   | false, _ ->
@@ -110,19 +124,18 @@ module History =
                   remove item
                   yield item.Key ]
 
+        history.VatsimState <- Some state
+
         { Added = additions; Removed = removed }
 
 type Store =
-    { GetMeetings: Cid -> History.MeetingItem list
-      GetCids: unit -> Cid list }
+    { GetMeetings: CallSign -> History.MeetingItem list }
 
 module Store =
 
-    type StoreMsg =
-        private
-        | UpdateHistory of MeetingKey seq
-        | GetMeetingsRequest of AsyncReplyChannel<History.MeetingItem list> * Cid
-        | GetCids of AsyncReplyChannel<Cid list>
+    type private StoreMsg =
+        | UpdateHistory of VatsimState
+        | GetMeetings of CallSign * AsyncReplyChannel<History.MeetingItem list>
 
     let create () =
         let history = History.create ()
@@ -134,13 +147,12 @@ module Store =
                 let! msg = mailbox.Receive()
 
                 match msg with
-                | GetMeetingsRequest (channel, cid) -> history |> History.get cid |> channel.Reply
-                | GetCids channel -> history |> History.getCids |> channel.Reply
-                | UpdateHistory meetings ->
+                | GetMeetings (callSign, channel) -> history |> History.getByCallSign callSign |> channel.Reply
+                | UpdateHistory state ->
                     let now = DateTimeOffset.Now
 
                     let updates =
-                        history |> History.update meetings now maxAge
+                        history |> History.update state now maxAge
 
                     updates |> ignore
 
@@ -152,18 +164,14 @@ module Store =
         async {
             while true do
                 let! state = loadCurrentStateAsync ()
-                let meetings = getMeetings state
-                mailbox.Post(UpdateHistory meetings)
+                mailbox.Post(UpdateHistory state)
                 do! Async.Sleep updateInterval
         }
         |> Async.Start
 
         let getMeetings cid =
-            mailbox.PostAndReply(fun replyChannel -> GetMeetingsRequest(replyChannel, cid))
-
-        let getCids() = mailbox.PostAndReply(GetCids)
+            mailbox.PostAndReply(fun replyChannel -> GetMeetings(cid, replyChannel))
 
         {
             GetMeetings = getMeetings
-            GetCids = getCids
         }
