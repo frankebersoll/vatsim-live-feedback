@@ -1,0 +1,270 @@
+{
+    "general": {
+        "version": 3,
+        "reload": 1,
+        "update": "20211113201032",
+        "update_timestamp": "2021-11-13T20:10:32.0147585Z",
+        "connected_clients": 1546,
+        "unique_users": 1468
+    },
+    "pilots": [
+        {
+            "cid": 857710,
+            "name": "Some Name KMIA",
+            "callsign": "DAL823",
+            "server": "USA-EAST",
+            "pilot_rating": 15,
+            "latitude": -56.55034,
+            "longitude": -50.53606,
+            "altitude": 36508,
+            "groundspeed": 552,
+            "transponder": "1200",
+            "heading": 92,
+            "qnh_i_hg": 29.43,
+            "qnh_mb": 997,
+            "flight_plan": {
+                "flight_rules": "I",
+                "aircraft": "B772/H-VW/N",
+                "aircraft_faa": "H/B772/H",
+                "aircraft_short": "B772",
+                "departure": "SCCI",
+                "arrival": "FACT",
+                "alternate": "",
+                "cruise_tas": "510",
+                "altitude": "37000",
+                "deptime": "1648",
+                "enroute_time": "0820",
+                "fuel_time": "0930",
+                "remarks": "/ P/ L/ V /V/",
+                "route": "BUNKO1 ALMIR UL670 PWL BONTA ITLINK UL211 APKIN",
+                "revision_id": 2,
+                "assigned_transponder": "1200"
+            },
+            "logon_time": "2021-11-13T04:52:40.8081261Z",
+            "last_updated": "2021-11-13T20:10:30.4517168Z"
+        },
+        {
+            "cid": 1553285,
+            "name": "Other Name ESSA",
+            "callsign": "ANA149",
+            "server": "GERMANY",
+            "pilot_rating": 0,
+            "latitude": 33.74083,
+            "longitude": 138.71559,
+            "altitude": 31478,
+            "groundspeed": 492,
+            "transponder": "1741",
+            "heading": 89,
+            "qnh_i_hg": 29.92,
+            "qnh_mb": 1013,
+            "flight_plan": {
+                "flight_rules": "I",
+                "aircraft": "B763/H-VD/C",
+                "aircraft_faa": "H/B763/A",
+                "aircraft_short": "B763",
+                "departure": "OTHH",
+                "arrival": "RJAA",
+                "alternate": "",
+                "cruise_tas": "500",
+                "altitude": "31000",
+                "deptime": "1010",
+                "enroute_time": "0933",
+                "fuel_time": "0960",
+                "remarks": "DOF/211113 /V/",
+                "route": "NAMLA N300 NOLSU P307 TONVO A777 NADSO B524 ALPOR M504 TELEM A791 BPL/N0494F330 A791 CEA B465 CTG A599 LINSO/K0917S1010 A599 GULOT/K0898S1070 A599 SGM A581 WHA R343 PK DCT NINAS G327 LAMEN/N0484F350 A593 SADLI/N0478F370 A593 FUE Y23 KASTE Y81 RUTAS",
+                "revision_id": 4,
+                "assigned_transponder": "1741"
+            },
+            "logon_time": "2021-11-13T08:32:47.4820269Z",
+            "last_updated": "2021-11-13T20:10:30.7161661Z"
+        },
+        {
+            "cid": 999702,
+            "name": "Third Name LGAV",
+            "callsign": "RYR69ZL",
+            "server": "GERMANY",
+            "pilot_rating": 0,
+            "latitude": 47.15078,
+            "longitude": 20.23619,
+            "altitude": 14864,
+            "groundspeed": 360,
+            "transponder": "2200",
+            "heading": 309,
+            "qnh_i_hg": 30.12,
+            "qnh_mb": 1020,
+            "flight_plan": {
+                "flight_rules": "I",
+                "aircraft": "B738/M-VGDW/C",
+                "aircraft_faa": "B738/L",
+                "aircraft_short": "B738",
+                "departure": "LBSF",
+                "arrival": "LHBP",
+                "alternate": "LZSL",
+                "cruise_tas": "420",
+                "altitude": "34000",
+                "deptime": "1915",
+                "enroute_time": "0102",
+                "fuel_time": "0203",
+                "remarks": "PBN/A1B1C1D1S1S2 COM/TCAS DOF/211113 REG/SPRSM EET/LRBB0014 LHCC0039 OPR/FR PER/C RVR/200 RMK/TCAS SIMBRIEF /V/",
+                "route": "OGOTA N133 LOMOS OVDOT DEGET KEZAL",
+                "revision_id": 1,
+                "assigned_transponder": "0000"
+            },
+            "logon_time": "2021-11-13T20:10:30.8111753Z",
+            "last_updated": "2021-11-13T20:10:30.8142416Z"
+        }
+    ],
+    "controllers": [
+        {
+            "cid": 1192433,
+            "name": "Some Controller",
+            "callsign": "LKPR_TWR",
+            "frequency": "134.550",
+            "facility": 4,
+            "rating": 5,
+            "server": "GERMANY",
+            "visual_range": 50,
+            "text_atis": [
+                "Ruzyne Tower",
+                "Check ATIS on 122.15"
+            ],
+            "last_updated": "2021-11-13T20:10:30.862659Z",
+            "logon_time": "2021-11-13T13:00:15.9975981Z"
+        },
+        {
+            "cid": 1546563,
+            "name": "Other Controller",
+            "callsign": "UAL30",
+            "frequency": "199.998",
+            "facility": 0,
+            "rating": 1,
+            "server": "GERMANY",
+            "visual_range": 40,
+            "text_atis": null,
+            "last_updated": "2021-11-13T20:10:30.6747916Z",
+            "logon_time": "2021-11-13T13:25:44.4455212Z"
+        }
+    ],
+    "servers": [
+        {
+            "ident": "USA-WEST",
+            "hostname_or_ip": "137.184.8.6",
+            "location": "San Francisco, USA",
+            "name": "USA-WEST",
+            "clients_connection_allowed": 1
+        },
+        {
+            "ident": "UK",
+            "hostname_or_ip": "178.62.56.106",
+            "location": "London, UK",
+            "name": "UK",
+            "clients_connection_allowed": 1
+        }
+    ],
+    "prefiles": [
+        {
+            "cid": 1167006,
+            "name": " ",
+            "callsign": "DAL2503",
+            "flight_plan": {
+                "flight_rules": "I",
+                "aircraft": "B763/H-SDE3FGHIM3RWXY/LB1",
+                "aircraft_faa": "H/B763/L",
+                "aircraft_short": "B763",
+                "departure": "KBUF",
+                "arrival": "KATL",
+                "alternate": "KBNA",
+                "cruise_tas": "449",
+                "altitude": "34000",
+                "deptime": "1820",
+                "enroute_time": "0140",
+                "fuel_time": "0309",
+                "remarks": "PBN/A1B1C1D1L1O1 DOF/211113 REG/N619SB EET/KZID0035 KZTL0059 OPR/DAL PER/D RMK/TCAS SIMBRIEF /V/",
+                "route": "JHW HVQ HLRRY ONDRE1",
+                "revision_id": 0,
+                "assigned_transponder": "0000"
+            },
+            "last_updated": "2021-11-13T18:14:50.6201202Z"
+        },
+        {
+            "cid": 1554430,
+            "name": " ",
+            "callsign": "DAL892",
+            "flight_plan": {
+                "flight_rules": "I",
+                "aircraft": "A320/M-",
+                "aircraft_faa": "",
+                "aircraft_short": "A320",
+                "departure": "KSEA",
+                "arrival": "KLAX",
+                "alternate": "KONT",
+                "cruise_tas": "315",
+                "altitude": "30000",
+                "deptime": "2030",
+                "enroute_time": "0235",
+                "fuel_time": "0300",
+                "remarks": "DOF/211113 /V/",
+                "route": "SUMMA2 SUMMA JINMO Q7 JAGWA BURGL IRNMN2",
+                "revision_id": 0,
+                "assigned_transponder": "0000"
+            },
+            "last_updated": "2021-11-13T20:09:00.1509046Z"
+        }
+    ],
+    "facilities": [
+        {
+            "id": 0,
+            "short": "OBS",
+            "long": "Observer"
+        },
+        {
+            "id": 1,
+            "short": "FSS",
+            "long": "Flight Service Station"
+        },
+        {
+            "id": 2,
+            "short": "DEL",
+            "long": "Clearance Delivery"
+        }
+    ],
+    "ratings": [
+        {
+            "id": -1,
+            "short": "INAC",
+            "long": "Inactive"
+        },
+        {
+            "id": 0,
+            "short": "SUS",
+            "long": "Suspended"
+        },
+        {
+            "id": 1,
+            "short": "OBS",
+            "long": "Observer"
+        },
+        {
+            "id": 2,
+            "short": "S1",
+            "long": "Tower Trainee"
+        }
+    ],
+    "pilot_ratings": [
+        {
+            "id": 0,
+            "short_name": "NEW",
+            "long_name": "Basic Member"
+        },
+        {
+            "id": 1,
+            "short_name": "PPL",
+            "long_name": "Private Pilot License"
+        },
+        {
+            "id": 3,
+            "short_name": "IR",
+            "long_name": "Instrument Rating"
+        }
+    ]
+}

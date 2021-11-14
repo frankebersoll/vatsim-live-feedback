@@ -3,9 +3,11 @@ framework: net5.0
 storage: none
 
 nuget FSharp.Core < 6.0
+nuget FSharp.Data
 nuget Microsoft.AspNetCore.Authentication.JwtBearer < 6.0
 
 nuget Fable.Remoting.Giraffe
+nuget Microsoft.NET.Test.Sdk
 nuget Saturn
 nuget Expecto
 
@@ -24,3 +26,4 @@ nuget Fulma
 nuget Fake.Core.Target
 nuget Fake.IO.FileSystem
 nuget Farmer
+nuget YoloDev.Expecto.TestSdk

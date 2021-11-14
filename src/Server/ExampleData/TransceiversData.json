@@ -1,0 +1,36 @@
+[
+    {
+        "callsign": "EDDN_F_APP",
+        "transceivers": [
+            {
+                "id": 0,
+                "frequency": 119475000,
+                "latDeg": 49.414525,
+                "lonDeg": 10.194603,
+                "heightMslM": 410.0,
+                "heightAglM": 219.0
+            }
+        ]
+    },
+    {
+        "callsign": "ACA860",
+        "transceivers": [
+            {
+                "id": 1,
+                "frequency": 133700000,
+                "latDeg": 54.79562566706899,
+                "lonDeg": -3.4667975386366514,
+                "heightMslM": 10733.955933976355,
+                "heightAglM": 10733.955933976355
+            },
+            {
+                "id": 2,
+                "frequency": 121500000,
+                "latDeg": 54.79562566706899,
+                "lonDeg": -3.4667975386366514,
+                "heightMslM": 10733.955933976355,
+                "heightAglM": 10733.955933976355
+            }
+        ]
+    }
+]
