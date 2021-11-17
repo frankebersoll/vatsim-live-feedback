@@ -7,8 +7,11 @@
     <ItemGroup>
         <None Include="index.html" />
         <None Include="paket.references" />
-        <Compile Include="HtmlHelpers.fs" />
-        <Compile Include="Interaction.fs" />
+        <Compile Include="Lib.fs" />
+        <Compile Include="Constants.fs" />
+        <Compile Include="Model.fs" />
+        <Compile Include="Common.fs" />
+        <Compile Include="Privacy.fs" />
         <Compile Include="Index.fs" />
         <Compile Include="App.fs" />
     </ItemGroup>

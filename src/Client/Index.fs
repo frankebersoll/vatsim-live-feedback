@@ -1,43 +1,59 @@
 module Client.Index
 
+open Client.Model
 open Elmish
 open Fable.Remoting.Client
+open Feliz.Router
 open Shared
 open Shared.Model
-
-type Model =
-    { Meetings: MeetingInfo list
-      CallSign: CallSign option
-      Input: string
-      Message: string option }
-
-type Msg =
-    | GotMeetings of CallSign * MeetingInfo list
-    | SetInput of string
-    | SetCallSign
 
 let meetingsApi =
     Remoting.createApi ()
     |> Remoting.withRouteBuilder Route.builder
     |> Remoting.buildProxy<IMeetingsApi>
 
+let onPageChanged page =
+    match page with
+    | Page.Home (Some callSign) ->
+        Cmd.OfAsync.perform meetingsApi.GetMeetings callSign (fun meetings -> GotMeetings(callSign, meetings))
+    | _ -> Cmd.none
+
 let init () : Model * Cmd<Msg> =
+    let page = Router.currentPath () |> parseUrl
+    let cmd = onPageChanged page
+
     let model =
-        { Meetings = []
+        { Page = page
+          Meetings = []
           CallSign = None
           Input = ""
           Message = None }
 
-    model, Cmd.none
+    model, cmd
 
 let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     match msg with
+    | NavigateTo page -> model, Cmd.navigatePath (page |> getUrl)
+    | UrlChanged segments ->
+        let page = parseUrl segments
+
+        let cmd =
+            match page with
+            | Page.Home (Some callSign) ->
+                Cmd.OfAsync.either
+                    meetingsApi.GetMeetings
+                    callSign
+                    (fun meetings -> GotMeetings(callSign, meetings))
+                    UnhandledError
+            | _ -> Cmd.none
+
+        { model with Page = page }, cmd
     | GotMeetings (callSign, meetings) ->
         match meetings with
         | [] ->
             { model with
                   Input = ""
-                  Message = Some "Not found." },
+                  Message = Some $"Call sign '{callSign}' not online." },
             Cmd.none
         | _ ->
             { model with
@@ -59,44 +75,13 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
             |> not
         then
             let callSign = model.Input |> CallSign.FromString
-
-            let cmd =
-                Cmd.OfAsync.perform meetingsApi.GetMeetings callSign (fun meetings -> GotMeetings(callSign, meetings))
-
-            { model with
-                  Input = ""
-                  CallSign = None },
-            cmd
+            { model with Input = "" }, Cmd.navigatePath (Page.Home(Some callSign) |> getUrl)
         else
             model, Cmd.none
+    | UnhandledError e -> { model with Model.Message = Some e.Message }, Cmd.none
 
 open Feliz
 open Feliz.Bulma
-
-let navBrand =
-    let icon =
-        HtmlHelpers.imageUrl "./public/FeedbackLogo.png"
-
-    Bulma.navbarBrand.div [
-        Bulma.navbarItem.a [
-            prop.href "/"
-            prop.children [
-                Html.img [
-                    prop.src icon
-                    prop.alt "Logo"
-                    prop.style [ style.marginRight 10 ]
-                ]
-                Html.h1 [
-                    prop.style [
-                        style.color.white
-                        style.fontWeight.bold
-                        style.fontSize (length.em 1.2)
-                    ]
-                    prop.text "Live Feedback"
-                ]
-            ]
-        ]
-    ]
 
 let containerBox (model: Model) (dispatch: Msg -> unit) =
     Bulma.box [
@@ -133,14 +118,14 @@ let containerBox (model: Model) (dispatch: Msg -> unit) =
                         Bulma.input.text [
                             prop.value model.Input
                             prop.placeholder "Enter Call Sign"
-                            Interaction.onEnter (fun () -> dispatch SetCallSign)
+                            prop.onKeyDown(key.enter, (fun _ -> dispatch SetCallSign))
                             prop.onChange (fun x -> SetInput x |> dispatch)
                         ]
                     ]
                 ]
                 Bulma.control.p [
                     Bulma.button.a [
-                        color.isPrimary
+                        color.isDark
                         prop.disabled (System.String.IsNullOrWhiteSpace(model.Input))
                         prop.onClick (fun _ -> dispatch SetCallSign)
                         prop.text "Get Comms"
@@ -150,55 +135,28 @@ let containerBox (model: Model) (dispatch: Msg -> unit) =
         ]
     ]
 
-let view (model: Model) (dispatch: Msg -> unit) =
-    Bulma.hero [
-        hero.isFullHeight
-        prop.style [
-            style.backgroundImageUrl (HtmlHelpers.imageUrl "./public/background.jpg")
-            style.backgroundSize.cover
-            style.backgroundRepeat.noRepeat
-            style.backgroundPosition "center"
-        ]
-        prop.children [
-            Bulma.heroHead [
-                Bulma.navbar [
-                    navbar.isFixedTop
-                    prop.style [
-                        style.backgroundColor (color.rgba (0x33, 0x33, 0x33, 0.9))
-                    ]
-                    prop.children [
-                        Bulma.container [ navBrand ]
-                    ]
-                ]
-            ]
-            Bulma.heroBody [
-                Bulma.container [
-                    Bulma.column [
-                        column.is6
-                        column.isOffset3
-                        prop.children [
-                            containerBox model dispatch
-                        ]
-                    ]
-                ]
-            ]
-            Bulma.heroFoot [
-                Bulma.tabs [
-                    Bulma.container [
-                        let link (text: string) (href: string) =
-                            Html.li [
-                                Html.a [
-                                    prop.text text
-                                    prop.href href
-                                ]
-                            ]
+let index (model: Model) (dispatch: Msg -> unit) =
+    Common.MainTemplate
+        dispatch
+        [ Bulma.column [
+              column.is6
+              column.isOffset3
+              prop.children [
+                  containerBox model dispatch
+              ]
+          ] ]
 
-                        Html.ul [
-                            link "GitHub" "https://github.com/frankebersoll/vatsim-live-feedback"
-                            link "Legal Notice" "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-                        ]
-                    ]
-                ]
-            ]
+[<ReactComponent>]
+let MainView (model: Model) (dispatch: Msg -> unit) =
+    let dispatch = React.useCallbackRef dispatch
+
+    React.router [
+        router.pathMode
+        router.onUrlChanged (UrlChanged >> dispatch)
+        router.children [
+            match model.Page with
+            | Page.Home _ -> index model dispatch
+            | Page.Privacy -> Privacy.privacy dispatch
+            | Page.NotFound -> Html.h1 "Not found"
         ]
     ]

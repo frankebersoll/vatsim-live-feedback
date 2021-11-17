@@ -14,7 +14,7 @@ jobs:
     environment: test
     env:
       SHOULD_DEPLOY: ${{ github.ref == 'refs/heads/main' }}
-    
+
     steps:
       - uses: actions/checkout@v2
         with:
@@ -25,7 +25,7 @@ jobs:
         with:
           node-version: '16'
           cache: 'yarn'
-      
+
       - name: Yarn Install
         run: yarn install
 
@@ -42,3 +42,5 @@ jobs:
 
       - name: Build / Deploy
         run: dotnet run -- ${{ env.SHOULD_DEPLOY == 'true' && 'azure' || 'bundle' }}
+        env:
+            VLF_DISCORD_INVITATION_CODE: ${{ secrets.VLF_DISCORD_INVITATION_CODE }}
