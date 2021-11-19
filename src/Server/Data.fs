@@ -1,15 +1,18 @@
 module Server.Data
 
+open System
 open FSharp.Data
 open Shared.Model
 
-let vatsimDataUri =
-    "https://data.vatsim.net/v3/vatsim-data.json"
+type VatsimDataUris =
+    { FlightDataUri: string
+      TransceiversDataUri: string }
 
-let transceiversDataUri =
-    "https://data.vatsim.net/v3/transceivers-data.json"
+let liveDataUris =
+    { FlightDataUri = "https://data.vatsim.net/v3/vatsim-data.json"
+      TransceiversDataUri = "https://data.vatsim.net/v3/transceivers-data.json" }
 
-type VatsimData = JsonProvider<"ExampleData/VatsimData.json">
+type FlightData = JsonProvider<"ExampleData/VatsimData.json">
 type TransceiversData = JsonProvider<"ExampleData/TransceiversData.json">
 
 type UserInfo = { CallerId: CallerId; Name: string }
@@ -19,98 +22,163 @@ type MeetingKey =
     { Pilot: CallerId
       Controller: CallerId }
 
-[<Measure>]
-type encodedVhf
-
-let encodedVhf i = i * 1<encodedVhf>
-
 let callerId cid callSign =
     { Cid = Cid cid
       CallSign = CallSign.FromString callSign }
 
-type VatsimData.Controller with
+type FlightData.Controller with
+    member this.CallerId = callerId this.Cid this.Callsign
+    member this.CallSign = CallSign.FromString this.Callsign
+
+type FlightData.Pilot with
     member this.CallerId = callerId this.Cid this.Callsign
 
-type VatsimData.Pilot with
-    member this.CallerId = callerId this.Cid this.Callsign
+type Frequency =
+    | Vhf of decimal
+    | Unicom of int
+    static member decode(vhf: int) =
+        let freq = vhf / 1000
 
-type VatsimState =
-    private
-        { VatsimData: VatsimData.Root
-          Frequencies: Map<CallSign, int<encodedVhf> []> }
+        match freq with
+        | 122800 -> Unicom(vhf % 1000)
+        | _ -> Vhf(decimal (freq) / 1000m)
 
-let getFrequencies callSign state =
-    state.Frequencies
+type Transceiver =
+    { Coordinate: float * float
+      Frequency: Frequency }
+
+type VatsimData =
+    { FlightData: FlightData.Root
+      Transceivers: Map<CallSign, Transceiver list>
+      WorldFreq: (float * float * int) list }
+
+let getTransceivers callSign state =
+    state.Transceivers
     |> Map.tryFind callSign
-    |> Option.defaultValue Array.empty
+    |> Option.defaultValue List.empty
 
-let loadCurrentStateAsync () =
+let loadCurrentStateAsync uris =
     async {
-        let! vatsimDataChild =
-            VatsimData.AsyncLoad(vatsimDataUri)
+        let! flightDataChild =
+            FlightData.AsyncLoad(uris.FlightDataUri)
             |> Async.StartChild
 
         let! transceiversDataChild =
-            TransceiversData.AsyncLoad(transceiversDataUri)
+            TransceiversData.AsyncLoad(uris.TransceiversDataUri)
             |> Async.StartChild
 
-        let! vatsimData = vatsimDataChild
+        let! flightData = flightDataChild
         let! transceiversData = transceiversDataChild
 
-        let frequenciesByCallSign =
+        let transceiversByCallsign =
             transceiversData
             |> Seq.map
                 (fun coms ->
                     CallSign.FromString coms.Callsign,
                     (coms.Transceivers
-                     |> Array.map (fun com -> encodedVhf com.Frequency)))
+                     |> Seq.map
+                         (fun com ->
+                             { Transceiver.Coordinate = (float com.LatDeg, float com.LonDeg)
+                               Frequency = Frequency.decode com.Frequency })
+                     |> List.ofSeq))
             |> Map.ofSeq
 
+        let worldFreq =
+            transceiversData
+            |> Seq.choose (fun coms -> coms.Transceivers |> Array.tryHead)
+            |> Seq.map (fun trans -> float (trans.LatDeg), float (trans.LonDeg), trans.Frequency)
+            |> List.ofSeq
+
         return
-            { VatsimState.VatsimData = vatsimData
-              Frequencies = frequenciesByCallSign }
+            { VatsimData.FlightData = flightData
+              Transceivers = transceiversByCallsign
+              WorldFreq = worldFreq }
     }
 
-let getUsers (state: VatsimState) =
+let getUsers (state: VatsimData) =
     let pilots =
-        state.VatsimData.Pilots
+        state.FlightData.Pilots
         |> Seq.map (fun p -> userInfo (callerId p.Cid p.Callsign) p.Name)
 
     let controllers =
-        state.VatsimData.Controllers
+        state.FlightData.Controllers
         |> Seq.map (fun c -> userInfo (callerId c.Cid c.Callsign) c.Name)
 
     pilots |> Seq.append controllers |> List.ofSeq
 
-let getMeetings (state: VatsimState) =
+let getMeetings (state: VatsimData) =
+
+    let calculateDistance (p1Latitude, p1Longitude) (p2Latitude, p2Longitude) =
+        let r = 6371.0 // km
+
+        let dLat =
+            (p2Latitude - p1Latitude) * Math.PI / 180.0
+
+        let dLon =
+            (p2Longitude - p1Longitude) * Math.PI / 180.0
+
+        let lat1 = p1Latitude * Math.PI / 180.0
+        let lat2 = p2Latitude * Math.PI / 180.0
+
+        let a =
+            Math.Sin(dLat / 2.0) * Math.Sin(dLat / 2.0)
+            + Math.Sin(dLon / 2.0)
+              * Math.Sin(dLon / 2.0)
+              * Math.Cos(lat1)
+              * Math.Cos(lat2)
+
+        let c =
+            2.0 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1.0 - a))
+
+        r * c
 
     let controllers =
-        query {
-            for controller in state.VatsimData.Controllers do
-                let callSign = CallSign.FromString controller.Callsign
-                let frequencies = state |> getFrequencies callSign
 
-                for frequency in frequencies do
-                    select (frequency, controller)
+        let isValidFrequency = function
+            | Vhf 199.998m -> false
+            | Unicom _ -> false
+            | _ -> true
+
+        query {
+            for controller in state.FlightData.Controllers do
+                for transceiver in state |> getTransceivers controller.CallSign do
+                    where (isValidFrequency transceiver.Frequency)
+                    groupBy transceiver.Frequency into g
+                    select (g.Key, g |> Seq.toList)
         }
         |> Map.ofSeq
 
     let meetings =
         query {
-            for pilot in state.VatsimData.Pilots do
+            for pilot in state.FlightData.Pilots do
                 let callSign = CallSign.FromString pilot.Callsign
 
-                let com1Frequency =
-                    state |> getFrequencies callSign |> Array.tryHead
+                let com1 =
+                    state |> getTransceivers callSign |> Seq.tryHead
+
+                where com1.IsSome
+                let com1 = com1.Value
+
+                let controllers = controllers.TryFind com1.Frequency
+                where controllers.IsSome
+                let controllers = controllers.Value
+
+                let pilotDistance = calculateDistance com1.Coordinate
 
                 let controller =
-                    com1Frequency |> Option.bind controllers.TryFind
+                    if controllers.Length = 1 then
+                        fst controllers.Head
+                    else
+                        let sorted =
+                            controllers
+                            |> Seq.sortBy (fun (_, t: Transceiver) -> pilotDistance t.Coordinate)
+                            |> Seq.toList
 
-                where controller.IsSome
+                        sorted.Head |> fst
 
                 select
                     { Pilot = pilot.CallerId
-                      Controller = controller.Value.CallerId }
+                      Controller = controller.CallerId }
         }
         |> Seq.toList
 

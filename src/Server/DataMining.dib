@@ -1,0 +1,81 @@
+#!markdown
+
+# Vatsim Analytics
+
+#!fsharp
+
+#r "nuget: FSharp.Data, 4.2.5"
+#r "nuget: Markdig"
+#r "nuget: XPlot.GoogleCharts"
+#r "nuget: XPlot.Plotly"
+
+#r "../Shared/bin/Debug/net5.0/Shared.dll"
+#r "bin/Debug/net5.0/Server.dll"
+
+open XPlot.Plotly
+open XPlot.GoogleCharts
+
+let MD (s: string) = s |> Markdig.Markdown.ToHtml |> HTML
+
+Formatter.Register<GoogleChart>(
+    Action<_,_>(fun (chart: GoogleChart) (writer: TextWriter) ->
+        writer.Write(chart.GetHtml())),
+    HtmlFormatter.MimeType)
+
+#!fsharp
+
+let rainbow (numOfSteps: int) (step: int) =
+    let h = float(step) / float(numOfSteps)
+    let h6 = h * 6.0
+    let i = int(Math.Floor(h6))
+    let f = h6 - float(i)
+    let q = 1.0 - f
+    let (r, g, b) =
+        match i with
+        | 0 -> 1.0, f, 0.0
+        | 1 -> q, 1.0, 0.0
+        | 2 -> 0.0, 1.0, f
+        | 3 -> 0.0, q, 1.0
+        | 4 -> f, 0.0, 1.0
+        | 5 -> 1.0, 0.0, q
+        | _ -> failwith "Math is broken"
+
+    "#" + ([|r; g; b|] |> Array.map(fun f -> byte(f * 255.0)) |> Convert.ToHexString)
+
+[0..5] |> Seq.map (rainbow 6)
+
+#!fsharp
+
+open Server.Data
+
+let data = loadCurrentStateAsync liveDataUris |> Async.RunSynchronously
+let worldFreq =
+    data.WorldFreq
+    |> Seq.map(fun (lat,lon,freq) -> lat, lon, freq / 1000)
+    |> Seq.filter(fun (_,_,freq) -> freq >= 118000 && freq <= 136975 && freq <> 122800)
+    |> Seq.toList
+
+#!fsharp
+
+let freq =
+    worldFreq
+    |> Seq.map (fun (_,_,freq) -> freq)
+    |> Seq.distinct
+    |> Seq.sort
+    |> Array.ofSeq
+let count = freq.Length
+let colorMap =
+    freq
+    |> Seq.mapi (fun i f -> match f with 122800 -> f, "#000000" | f -> f, rainbow count i)
+    |> Array.ofSeq
+
+#!fsharp
+
+let options = Options()
+options.colorAxis <- ColorAxis(values = (colorMap |> Array.map fst), colors = (colorMap |> Array.map snd))
+options.sizeAxis <- SizeAxis(minSize = 5, maxSize = 5)
+
+worldFreq
+|> Chart.Geo
+|> Chart.WithOptions options
+|> Chart.WithSize (700,400)

@@ -31,7 +31,7 @@ module History =
             { Meetings: MeetingHistoryDict
               Pending: MeetingHistoryDict
               ByCid: Dictionary<Cid, MeetingItem list>
-              mutable VatsimState: VatsimState option }
+              mutable VatsimState: VatsimData option }
 
     let create () =
         { Meetings = Dictionary()
@@ -57,7 +57,7 @@ module History =
         |> Option.map (fun user -> history |> get user.CallerId.Cid)
         |> Option.defaultValue []
 
-    let update (state: VatsimState) (now: DateTimeOffset) (maxAge: TimeSpan) (history: MeetingHistory) =
+    let update (state: VatsimData) (now: DateTimeOffset) (maxAge: TimeSpan) (history: MeetingHistory) =
 
         let historyMeetings = history.Meetings
         let pending = history.Pending
@@ -134,7 +134,7 @@ type Store =
 module Store =
 
     type private StoreMsg =
-        | UpdateHistory of VatsimState
+        | UpdateHistory of VatsimData
         | GetMeetings of CallSign * AsyncReplyChannel<History.MeetingItem list>
 
     let create () =
@@ -163,7 +163,7 @@ module Store =
 
         async {
             while true do
-                let! state = loadCurrentStateAsync ()
+                let! state = loadCurrentStateAsync liveDataUris
                 mailbox.Post(UpdateHistory state)
                 do! Async.Sleep updateInterval
         }
