@@ -4,11 +4,13 @@ open Browser.Types
 open Client.Model
 open Feliz
 open Feliz.Bulma
-open Feliz.Router
 
-let goTo (dispatch: Msg -> unit) (page: Page) (e: MouseEvent) =
+let onClickDispatch (msg: Msg) (dispatch: Msg -> unit) (e: MouseEvent) =
     e.preventDefault ()
-    dispatch (NavigateTo page)
+    dispatch msg
+
+let goTo (page: Page) dispatch e =
+    onClickDispatch (NavigateTo page) dispatch e
 
 type LinkTarget =
     | Url of string
@@ -16,20 +18,17 @@ type LinkTarget =
 
 module prop =
     let navigate (dispatch: Msg -> unit) (page: Page) =
-        let url = Router.formatPath ()
+        let url = getUrl page
 
         [ prop.href url
-          prop.onClick (goTo dispatch page) ]
+          prop.onClick (goTo page dispatch) ]
 
-let link dispatch target props =
-    Html.a [
-        match target with
-        | Url url ->
-            prop.href url
-            prop.target.blank
-        | Page page -> yield! prop.navigate dispatch page
-        yield! props
-    ]
+let link dispatch target =
+    [ match target with
+      | Url url ->
+          prop.href url
+          prop.target.blank
+      | Page page -> yield! prop.navigate dispatch page ]
 
 let icon (cls: string) =
     Bulma.icon [
@@ -39,9 +38,19 @@ let icon (cls: string) =
         ]
     ]
 
-type DispatchProps = { Dispatch: Msg -> unit }
+type HeaderProps =
+    { Dispatch: Msg -> unit
+      Auth: AuthModel }
 
-let header props =
+type FooterProps = { Dispatch: Msg -> unit }
+
+let activeDevelopment () =
+    Bulma.tag [
+        color.isWarning
+        prop.text "This app is under active development"
+    ]
+
+let header (props: HeaderProps) =
     let icon =
         Lib.Parcel.publicAsset "FeedbackLogo.png"
 
@@ -67,6 +76,33 @@ let header props =
             ]
         ]
 
+    let navbarAuthItem =
+        Bulma.navbarItem.div [
+            let isAuthenticating =
+                match props.Auth with
+                | Authenticating -> true
+                | _ -> false
+
+            match props.Auth with
+            | User user ->
+                Html.div [
+                    color.hasTextWhite
+                    prop.children [
+                        Bulma.icon [
+                            Html.i [ prop.className "fas fa-user" ]
+                        ]
+                        Html.span user
+                    ]
+                ]
+            | _ ->
+                Bulma.button.button [
+                    if isAuthenticating then
+                        button.isLoading
+                    prop.text "Sign in"
+                    prop.onClick (fun _ -> props.Dispatch Msg.SignIn)
+                ]
+        ]
+
     Bulma.heroHead [
         Bulma.navbar [
             prop.style [
@@ -76,14 +112,7 @@ let header props =
                 Bulma.container [
                     navBarBrand
                     Bulma.navbarMenu [
-                        Bulma.navbarEnd.div [
-                            Bulma.navbarItem.div [
-                                Bulma.tag [
-                                    color.isWarning
-                                    prop.text "This app is under active development"
-                                ]
-                            ]
-                        ]
+                        Bulma.navbarEnd.div [ navbarAuthItem ]
                     ]
                 ]
             ]
@@ -92,7 +121,7 @@ let header props =
 
 let rec Header = React.memo (nameof Header, header)
 
-let footer props =
+let footer (props: FooterProps) =
     Bulma.heroFoot [
         Bulma.tabs [
             tabs.isSmall
@@ -100,13 +129,13 @@ let footer props =
                 Bulma.container [
                     let link (iconClass: string) (text: string) target =
                         Html.li [
-                            link
-                                props.Dispatch
-                                target
-                                [ prop.children [
-                                      icon iconClass
-                                      Html.text text
-                                  ] ]
+                            Html.a [
+                                yield! link props.Dispatch target
+                                prop.children [
+                                    icon iconClass
+                                    Html.text text
+                                ]
+                            ]
                         ]
 
                     Html.ul [
@@ -122,11 +151,13 @@ let footer props =
 let rec Footer = React.memo (nameof Footer, footer)
 
 [<ReactComponent>]
-let MainTemplate (dispatch: Msg -> unit) (content: ReactElement seq) =
+let MainTemplate (model: Model.Model) (dispatch: Msg -> unit) (content: ReactElement seq) =
     Bulma.hero [
         hero.isFullHeight
         prop.children [
-            Header { Dispatch = dispatch }
+            Header
+                { Dispatch = dispatch
+                  Auth = model.Authentication }
             Bulma.heroBody [
                 prop.children [
                     Bulma.container content

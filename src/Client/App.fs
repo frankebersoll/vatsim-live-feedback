@@ -9,7 +9,7 @@ open Elmish.HMR
 #endif
 
 Lib.CookieConsent.run (
-    let privacyUrl = Model.getFullUrl Model.Page.Privacy
+    let privacyUrl = Model.getUrl Model.Page.Privacy |> Model.toFullUrl
 
     {| notice_banner_type = "simple"
        consent_type = "express"

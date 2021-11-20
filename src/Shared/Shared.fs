@@ -24,9 +24,20 @@ module Model =
           Name: string
           Start: DateTimeOffset }
 
+    type AuthenticationInfo =
+        { Authority: string
+          RedirectUri: string
+          ClientId: string }
+
 module Route =
+    [<Literal>]
+    let oauthCallbackPath = "oidc-signin"
     let builder typeName methodName =
         sprintf "/api/%s/%s" typeName methodName
 
 type IMeetingsApi =
-    { GetMeetings: Model.CallSign -> Async<Model.MeetingInfo list> }
+    {
+        GetMeetings: Model.CallSign -> Async<Model.MeetingInfo list>
+        Authorize: string -> Async<string>
+        GetAuthenticationInfo: unit -> Async<Model.AuthenticationInfo>
+    }

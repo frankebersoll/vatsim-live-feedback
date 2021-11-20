@@ -5,17 +5,26 @@ open Shared.Model
 
 type Page =
     | Home of CallSign option
+    | OidcSignin of code: string
     | Privacy
     | NotFound
 
+type AuthModel =
+    | Unauthenticated
+    | Authenticating
+    | User of string
+
 type Model =
     { Page: Page
+      Authentication: AuthModel
       Meetings: MeetingInfo list
       CallSign: CallSign option
       Input: string
       Message: string option }
 
 type Msg =
+    | SignIn
+    | Authenticated of string
     | NavigateTo of Page
     | UrlChanged of string list
     | GotMeetings of CallSign * MeetingInfo list
@@ -29,6 +38,7 @@ let parseUrl =
     function
     | [] -> Page.Home None
     | [ Route.Query [ "callsign", value ] ] -> Page.Home(Some(CallSign.FromString value))
+    | [ Shared.Route.oauthCallbackPath; Route.Query [ "code", code ] ] -> Page.OidcSignin code
     | [ "privacy" ] -> Page.Privacy
     | _ -> Page.NotFound
 
@@ -42,9 +52,9 @@ let getUrl =
             |> Option.defaultValue []
         )
     | Privacy -> Router.formatPath "privacy"
-    | NotFound -> failwith "Cannot create URL for 'Not found'"
+    | page -> failwith $"Cannot create URL for '{page}'"
 
-let getFullUrl page =
+let toFullUrl (url: string) =
     let location = Browser.Dom.window.location
-    let url = page |> getUrl
-    $"{location.protocol}//{location.host}{url}"
+    System.Uri(System.Uri($"{location.protocol}//{location.host}"), url).ToString()
+

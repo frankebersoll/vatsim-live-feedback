@@ -4,9 +4,9 @@ storage: none
 
 nuget FSharp.Core < 6.0
 nuget FSharp.Data
-nuget Microsoft.AspNetCore.Authentication.JwtBearer < 6.0
 
 nuget Fable.Remoting.Giraffe
+nuget FsToolkit.ErrorHandling
 nuget Microsoft.NET.Test.Sdk
 nuget Saturn
 nuget Expecto

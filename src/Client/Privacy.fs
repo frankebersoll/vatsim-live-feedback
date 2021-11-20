@@ -2,10 +2,12 @@ module Client.Privacy
 
 open Feliz
 
+let homeUrl = Model.getUrl (Model.Page.Home None) |> Model.toFullUrl
+
 let privacyHtml = $"""
 <h1>Privacy Policy for VATSIM Live Feedback</h1>
 
-<p>At VATSIM Live Feedback, accessible from {Model.getFullUrl (Model.Page.Home None)}, one of our main priorities is the privacy of our users. This Privacy Policy document contains types of information that is collected and recorded by VATSIM Live Feedback and how we use it.</p>
+<p>At VATSIM Live Feedback, accessible from {homeUrl}, one of our main priorities is the privacy of our users. This Privacy Policy document contains types of information that is collected and recorded by VATSIM Live Feedback and how we use it.</p>
 
 <p>If you have additional questions or require more information about our Privacy Policy, do not hesitate to contact us.</p>
 
@@ -84,7 +86,7 @@ let privacyHtml = $"""
 <p>VATSIM Live Feedback does not knowingly collect any Personal Identifiable Information from children under the age of 13. If you think that your child provided this kind of information on our website, we strongly encourage you to contact us immediately and we will do our best efforts to promptly remove such information from our records.</p>
 """
 
-let privacy dispatch = Common.MainTemplate dispatch [
+let privacy dispatch model = Common.MainTemplate dispatch model [
     Html.div [
         prop.className ["content"; "box"]
         prop.style [

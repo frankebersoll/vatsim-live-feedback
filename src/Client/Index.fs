@@ -2,52 +2,44 @@ module Client.Index
 
 open Client.Model
 open Elmish
-open Fable.Remoting.Client
 open Feliz.Router
 open Shared
 open Shared.Model
 
-let meetingsApi =
-    Remoting.createApi ()
-    |> Remoting.withRouteBuilder Route.builder
-    |> Remoting.buildProxy<IMeetingsApi>
-
-let onPageChanged page =
+let onPageChanged model page =
     match page with
     | Page.Home (Some callSign) ->
-        Cmd.OfAsync.perform meetingsApi.GetMeetings callSign (fun meetings -> GotMeetings(callSign, meetings))
-    | _ -> Cmd.none
+        model, Cmd.OfAsync.perform Api.meetings.GetMeetings callSign (fun meetings -> GotMeetings(callSign, meetings))
+    | Page.OidcSignin code ->
+        { model with
+              Authentication = Authenticating },
+        Auth.handleCode code
+    | _ -> model, Cmd.none
 
 let init () : Model * Cmd<Msg> =
     let page = Router.currentPath () |> parseUrl
-    let cmd = onPageChanged page
 
     let model =
         { Page = page
+          Authentication = AuthModel.Unauthenticated
           Meetings = []
           CallSign = None
           Input = ""
           Message = None }
 
-    model, cmd
+    onPageChanged model page
 
 let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     match msg with
+    | SignIn -> model, Auth.navigateToAuthCmd ()
+    | Authenticated user ->
+        { model with
+              Authentication = User user },
+        Cmd.none
     | NavigateTo page -> model, Cmd.navigatePath (page |> getUrl)
     | UrlChanged segments ->
         let page = parseUrl segments
-
-        let cmd =
-            match page with
-            | Page.Home (Some callSign) ->
-                Cmd.OfAsync.either
-                    meetingsApi.GetMeetings
-                    callSign
-                    (fun meetings -> GotMeetings(callSign, meetings))
-                    UnhandledError
-            | _ -> Cmd.none
-
-        { model with Page = page }, cmd
+        onPageChanged { model with Page = page } page
     | GotMeetings (callSign, meetings) ->
         match meetings with
         | [] ->
@@ -78,7 +70,10 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
             { model with Input = "" }, Cmd.navigatePath (Page.Home(Some callSign) |> getUrl)
         else
             model, Cmd.none
-    | UnhandledError e -> { model with Model.Message = Some e.Message }, Cmd.none
+    | UnhandledError e ->
+        { model with
+              Model.Message = Some e.Message },
+        Cmd.none
 
 open Feliz
 open Feliz.Bulma
@@ -118,7 +113,7 @@ let containerBox (model: Model) (dispatch: Msg -> unit) =
                         Bulma.input.text [
                             prop.value model.Input
                             prop.placeholder "Enter Call Sign"
-                            prop.onKeyDown(key.enter, (fun _ -> dispatch SetCallSign))
+                            prop.onKeyDown (key.enter, (fun _ -> dispatch SetCallSign))
                             prop.onChange (fun x -> SetInput x |> dispatch)
                         ]
                     ]
@@ -137,6 +132,7 @@ let containerBox (model: Model) (dispatch: Msg -> unit) =
 
 let index (model: Model) (dispatch: Msg -> unit) =
     Common.MainTemplate
+        model
         dispatch
         [ Bulma.column [
               column.is6
@@ -156,7 +152,8 @@ let MainView (model: Model) (dispatch: Msg -> unit) =
         router.children [
             match model.Page with
             | Page.Home _ -> index model dispatch
-            | Page.Privacy -> Privacy.privacy dispatch
+            | Page.OidcSignin _ -> index model dispatch
+            | Page.Privacy -> Privacy.privacy model dispatch
             | Page.NotFound -> Html.h1 "Not found"
         ]
     ]

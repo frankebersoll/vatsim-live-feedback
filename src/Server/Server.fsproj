@@ -5,13 +5,14 @@
         <TargetFramework>net5.0</TargetFramework>
     </PropertyGroup>
     <ItemGroup>
-        <None Include="paket.references"/>
-        <Compile Include="Data.fs"/>
-        <Compile Include="Model.fs"/>
-        <Compile Include="Server.fs"/>
+        <None Include="paket.references" />
+        <Compile Include="Data.fs" />
+        <Compile Include="Model.fs" />
+        <Compile Include="Authentication.fs" />
+        <Compile Include="Server.fs" />
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\Shared\Shared.fsproj"/>
+        <ProjectReference Include="..\Shared\Shared.fsproj" />
     </ItemGroup>
-    <Import Project="..\..\.paket\Paket.Restore.targets"/>
+    <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

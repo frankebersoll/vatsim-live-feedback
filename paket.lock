@@ -160,6 +160,8 @@ NUGET
     FSharp.Core (5.0.2)
     FSharp.Data (4.2.5)
       FSharp.Core (>= 4.7.2)
+    FsToolkit.ErrorHandling (2.10)
+      FSharp.Core (>= 4.7)
     Fulma (2.14.1)
       Fable.Core (>= 3.2.6)
       Fable.React (>= 7.4)
