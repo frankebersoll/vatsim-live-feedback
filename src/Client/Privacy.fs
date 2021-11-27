@@ -86,12 +86,15 @@ let privacyHtml = $"""
 <p>VATSIM Live Feedback does not knowingly collect any Personal Identifiable Information from children under the age of 13. If you think that your child provided this kind of information on our website, we strongly encourage you to contact us immediately and we will do our best efforts to promptly remove such information from our records.</p>
 """
 
+open Feliz.Bulma
+
 let privacy dispatch model = Common.MainTemplate dispatch model [
-    Html.div [
-        prop.className ["content"; "box"]
-        prop.style [
-            style.backgroundColor (color.rgba(0xFF, 0xFF, 0xFF, 0.9))
-        ]
-        prop.innerHtml privacyHtml
-    ]
+        Bulma.box [
+            Bulma.content [
+                prop.style [
+                    style.backgroundColor (color.rgba(0xFF, 0xFF, 0xFF, 0.9))
+                ]
+                prop.innerHtml privacyHtml
+            ]
+       ]
 ]

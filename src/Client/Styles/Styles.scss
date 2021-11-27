@@ -1,0 +1,100 @@
+@use "Base.scss" as bulma;
+@use "sass:color";
+
+html, body {
+    // When scrolling down beyond the top; iOS Safari navbar backdrop
+    background-color: bulma.$dark;
+}
+
+.background-image {
+    background-image: url("../public/background.jpg");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    height: 100vh;
+    width: 100vw;
+    position: fixed;
+    z-index: 0;
+}
+
+#app-root {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - #{bulma.$navbar-height});
+    color: white;
+}
+
+header {
+    .button {
+        // Buttons in the header were slightly too high, so the header would
+        // jump in height if the buttons are collapsed due to media queries
+        padding-top: calc(0.4em - 1px);
+        padding-bottom: calc(0.4em - 1px);
+        height: auto;
+        line-height: 1.4em;
+    }
+
+    .navbar-brand {
+        @include bulma.touch {
+            justify-content: center;
+            .navbar-burger {
+                margin-left: unset;
+                position: fixed;
+                right: 0;
+            }
+        }
+    }
+}
+
+main {
+    flex: 1;
+    z-index: 1;
+
+    & > .container > .box {
+        margin: 1rem 0;
+        @include bulma.touch {
+            border-radius: 0;
+        }
+    }
+}
+
+footer {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    padding: 0 0 env(safe-area-inset-bottom) 0;
+    /* adds the safe-area-inset-bottom value to the initial 1em of padding.
+    a larger black area will display for a device that has a positive value for this variable. */
+    //position: sticky;
+    bottom: 0;
+    z-index: 30;
+}
+
+footer .tabs.no-border {
+    ul, a {
+        border-bottom-width: 0;
+        border-bottom-style: none;
+        color: #999;
+        &:hover {
+            color: #CCC;
+        }
+    }
+}
+
+.contentitem {
+    background-color: rgba(0,0,0,0.8);
+    padding: 10px;
+    margin: 10px;
+}
+
+div.cookieconsent-com---nb .cc-nb-main-container {
+    padding: 1rem;
+}
+
+@media (min-width: 321px) {
+    div.cookieconsent-com---nb-simple {
+        right: 1em;
+        bottom: 1em;
+    }
+}
+

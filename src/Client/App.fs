@@ -25,5 +25,5 @@ Program.mkProgram Index.init Index.update Index.MainView
 #if DEBUG
 |> Program.withConsoleTrace
 #endif
-|> Program.withReactSynchronous "elmish-app"
+|> Program.withReactSynchronous "app-root"
 |> Program.run

@@ -78,7 +78,7 @@ let loadCurrentStateAsync uris =
                     (coms.Transceivers
                      |> Seq.map
                          (fun com ->
-                             { Transceiver.Coordinate = (float com.LatDeg, float com.LonDeg)
+                             { Transceiver.Coordinate = (com.LatDeg, com.LonDeg)
                                Frequency = Frequency.decode com.Frequency })
                      |> List.ofSeq))
             |> Map.ofSeq

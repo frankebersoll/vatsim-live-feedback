@@ -21,7 +21,8 @@
         <ProjectReference Include="..\Shared\Shared.fsproj" />
     </ItemGroup>
     <ItemGroup>
-      <Content Include="Styles.scss" />
+      <Content Include="Styles\Styles.scss" />
+      <Content Include="Styles\Base.scss" />
     </ItemGroup>
     <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

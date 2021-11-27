@@ -31,7 +31,7 @@ let init () : Model * Cmd<Msg> =
 
 let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     match msg with
-    | SignIn -> model, Auth.navigateToAuthCmd ()
+    | SignIn -> { model with Authentication = Authenticating }, Auth.navigateToAuthCmd ()
     | Authenticated user ->
         { model with
               Authentication = User user },

@@ -52,7 +52,8 @@ let getUrl =
             |> Option.defaultValue []
         )
     | Privacy -> Router.formatPath "privacy"
-    | page -> failwith $"Cannot create URL for '{page}'"
+    | Page.OidcSignin code -> Router.formatPath(Shared.Route.oauthCallbackPath, [("code", code)])
+    | Page.NotFound -> Router.formatPath "notfound"
 
 let toFullUrl (url: string) =
     let location = Browser.Dom.window.location
