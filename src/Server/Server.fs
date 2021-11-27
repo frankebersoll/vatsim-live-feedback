@@ -4,6 +4,8 @@ open Fable.Remoting.Server
 open Fable.Remoting.Giraffe
 open Microsoft.AspNetCore.Http
 open Microsoft.Extensions.DependencyInjection
+open Microsoft.Extensions.Hosting
+open Microsoft.Extensions.Configuration
 open Saturn
 
 open Shared
@@ -63,12 +65,16 @@ let webApp =
     |> Remoting.fromContext getApi
     |> Remoting.buildHttpHandler
 
-let configure (services: IServiceCollection) =
+let configureServices (services: IServiceCollection) =
     let config =
         Application.Config.getConfiguration services
 
     services
-    |> Authentication.configure (config.GetSection "Auth")
+    |> Authentication.configure (config.GetSection "OAuth")
+
+let configureHost (host: IHostBuilder) =
+    host.ConfigureAppConfiguration(fun b ->
+        b.AddEnvironmentVariables("VLF_") |> ignore)
 
 let app =
     application {
@@ -78,7 +84,8 @@ let app =
         use_static "public"
         use_gzip
         use_cookies_authentication "VatsimLiveFeedback"
-        service_config configure
+        service_config configureServices
+        host_config configureHost
     }
 
 run app

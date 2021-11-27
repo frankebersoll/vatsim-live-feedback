@@ -44,3 +44,5 @@ jobs:
         run: dotnet run -- ${{ env.SHOULD_DEPLOY == 'true' && 'azure' || 'bundle' }}
         env:
             VLF_DISCORD_INVITATION_CODE: ${{ secrets.VLF_DISCORD_INVITATION_CODE }}
+            VLF_OAUTH__CLIENTID: ${{ secrets.VLF_OAUTH_CLIENT_ID }}
+            VLF_OAUTH__CLIENTSECRET: ${{ secrets.VLF_OAUTH_CLIENT_SECRET }}
