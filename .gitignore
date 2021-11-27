@@ -11,6 +11,7 @@ obj/
 bin/
 output/
 dist/
+lib/
 packages/
 paket-files/
 node_modules/

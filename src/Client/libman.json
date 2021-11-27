@@ -1,0 +1,14 @@
+{
+  "version": "1.0",
+  "defaultProvider": "unpkg",
+  "libraries": [
+    {
+      "library": "bulma@0.9.3",
+      "destination": "lib/bulma",
+        "files": [
+            "sass/**/*",
+            "bulma.sass"
+        ]
+    }
+  ]
+}

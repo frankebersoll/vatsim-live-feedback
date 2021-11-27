@@ -23,6 +23,7 @@
     <ItemGroup>
       <Content Include="Styles\Styles.scss" />
       <Content Include="Styles\Base.scss" />
+      <Content Include="libman.json" />
     </ItemGroup>
     <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

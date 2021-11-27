@@ -25,6 +25,12 @@
       "commands": [
         "femto"
       ]
+    },
+    "microsoft.web.librarymanager.cli": {
+      "version": "2.1.113",
+      "commands": [
+        "libman"
+      ]
     }
   }
 }
