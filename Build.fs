@@ -46,6 +46,7 @@ Target.create "Azure" (fun _ ->
         settings secretSettings
         system_identity
         runtime_stack Runtime.DotNet50
+        https_only
     }
 
     let emptySecret secretName = secret {
