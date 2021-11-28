@@ -1,10 +1,20 @@
 module Helpers
 
 open Fake.Core
+open Fake.IO
+open System.Text.RegularExpressions
 
 let initializeContext () =
     let execContext = Context.FakeExecutionContext.Create false "build.fsx" [ ]
     Context.setExecutionContext (Context.RuntimeContext.Fake execContext)
+
+    if File.exists ".env" then
+        File.read ".env"
+        |> Seq.map (fun s -> Regex.Match(s, "^([^=]+)=(.*)$"))
+        |> Seq.filter (fun m -> m.Success)
+        |> Seq.map (fun m -> m.Groups.[1].Value, m.Groups.[2].Value)
+        |> Seq.iter (fun (name, value) ->
+            Environment.setEnvironVar name value)
 
 module Proc =
     module Parallel =
@@ -93,10 +103,13 @@ let runParallel processes =
     |> Proc.Parallel.run
     |> ignore
 
-let runOrDefault args =
+let runOrDefault args dependencies =
     try
         match args with
-        | [| target |] -> Target.runOrDefault target
+        | [| target |] ->
+            dependencies() |> ignore
+            Target.runOrDefault target
+        | [| "only"; target |] -> Target.runOrDefault target
         | _ -> Target.runOrDefault "Run"
         0
     with e ->

@@ -19,6 +19,7 @@ release.cmd
 release.sh
 *.orig
 *.DotSettings.user
+.env
 .pnp.*
 .yarn/*
 !.yarn/patches

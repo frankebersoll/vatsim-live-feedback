@@ -31,13 +31,48 @@ Target.create "Bundle" (fun _ ->
 )
 
 Target.create "Azure" (fun _ ->
+
+    let vaultName = "VatsimLiveFeedback-vault"
+    let secretRef name = $"@Microsoft.KeyVault(VaultName={vaultName};SecretName={name})"
+    let secrets = [
+        "VLF_OAuth__ClientId", "oauth-client-id"
+        "VLF_OAuth__ClientSecret", "oauth-client-secret"
+    ]
+    let secretSettings = secrets |> List.map (fun (key,name) -> key, secretRef name)
     let web = webApp {
         name "VatsimLiveFeedback"
         zip_deploy "deploy"
+        link_to_keyvault (ResourceName vaultName)
+        settings secretSettings
+        system_identity
+        runtime_stack Runtime.DotNet50
     }
+
+    let emptySecret secretName = secret {
+        name secretName
+        value (ArmExpression.literal "")
+    }
+
+    let vaultUser =
+        Environment.environVarOrNone "VLF_KEYVAULT_USER_OBJECTID"
+        |> Option.bind (fun s -> match System.Guid.TryParse(s) with true, guid -> ObjectId guid |> Some | _ -> None)
+
+    let vault = keyVault {
+        name vaultName
+        add_secrets (secrets |> List.map (fun (_, name) -> emptySecret name))
+        add_access_policies [
+            AccessPolicy.create (web.SystemIdentity, [KeyVault.Secret.List; KeyVault.Secret.Get])
+            if vaultUser.IsSome then
+                AccessPolicy.create (vaultUser.Value, KeyVault.Secret.All)
+        ]
+    }
+
     let deployment = arm {
         location Location.WestEurope
-        add_resource web
+        add_resources [
+            web
+            vault
+        ]
     }
 
     deployment
@@ -65,7 +100,7 @@ Target.create "Format" (fun _ ->
 
 open Fake.Core.TargetOperators
 
-let dependencies = [
+let dependencies () = [
     "Clean"
         ==> "InstallClient"
         ==> "Bundle"
@@ -80,4 +115,4 @@ let dependencies = [
 ]
 
 [<EntryPoint>]
-let main args = runOrDefault args
+let main args = runOrDefault args dependencies

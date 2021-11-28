@@ -18,7 +18,7 @@ open FsToolkit.ErrorHandling
 open Shared.Model
 
 type AuthenticationOptions() =
-    member val Authority: string = "https://auth-demo.vatsim.org/" with get, set
+    member val Authority: string = "https://auth-demo.vatsim.org" with get, set
     member val ClientId: string = "" with get, set
     member val ClientSecret: string = "" with get, set
 

@@ -3,7 +3,7 @@
     "scripts": {
         "postinstall": "dotnet tool restore && cd src/Client && dotnet libman restore",
         "start": "dotnet fable watch --cwd src/Client -o output --run parcel index.html",
-        "bundle": "dotnet fable --cwd src/Client -o output --run parcel build index.html --dist-dir ../../deploy/public"
+        "bundle": "dotnet fable --cwd src/Client -o output --run parcel build index.html --dist-dir ../../deploy/wwwroot"
     },
     "devDependencies": {
         "@parcel/transformer-sass": "^2.0.1",

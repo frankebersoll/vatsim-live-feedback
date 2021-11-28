@@ -2,11 +2,13 @@ module Server.App
 
 open Fable.Remoting.Server
 open Fable.Remoting.Giraffe
+open Microsoft.AspNetCore.Hosting
 open Microsoft.AspNetCore.Http
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.Configuration
 open Saturn
+open Giraffe
 
 open Shared
 open Shared.Model
@@ -59,11 +61,26 @@ let getApi (ctx: HttpContext) =
     let authSvc = Authentication.getState ctx
     createApi authSvc
 
-let webApp =
+let apiRouter =
     Remoting.createApi ()
     |> Remoting.withRouteBuilder Route.builder
     |> Remoting.fromContext getApi
     |> Remoting.buildHttpHandler
+
+let spaRouter : HttpHandler =
+    fun (next : HttpFunc) (ctx : HttpContext) ->
+        let fileProvider = ctx.GetService<IWebHostEnvironment>().WebRootFileProvider
+        let index = fileProvider.GetFileInfo("index.html")
+        let path = index.PhysicalPath
+        htmlFile path next ctx
+
+let webApp =
+    router {
+        forward "" apiRouter
+        get "/" spaRouter
+        get "/privacy" spaRouter
+        get "/oidc-signin" spaRouter
+    }
 
 let configureServices (services: IServiceCollection) =
     let config =
@@ -72,20 +89,34 @@ let configureServices (services: IServiceCollection) =
     services
     |> Authentication.configure (config.GetSection "OAuth")
 
+open System.IO
+
+let webRootPath =
+    let currentDir = Directory.GetCurrentDirectory()
+    let dist = Path.GetFullPath("../Client/dist", currentDir)
+    let pub = Path.GetFullPath("wwwroot", currentDir)
+    if Directory.Exists(dist) then dist else pub
+
 let configureHost (host: IHostBuilder) =
-    host.ConfigureAppConfiguration(fun b ->
+    host
+        .ConfigureAppConfiguration(fun b ->
         b.AddEnvironmentVariables("VLF_") |> ignore)
+
+let configureWebHost (host: IWebHostBuilder) =
+    host
+        .UseWebRoot(webRootPath)
 
 let app =
     application {
         url "http://0.0.0.0:8085"
         use_router webApp
         memory_cache
-        use_static "public"
+        use_static webRootPath
         use_gzip
         use_cookies_authentication "VatsimLiveFeedback"
         service_config configureServices
         host_config configureHost
+        webhost_config configureWebHost
     }
 
 run app
