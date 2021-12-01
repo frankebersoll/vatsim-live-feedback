@@ -2,6 +2,16 @@ namespace Shared
 
 open System
 
+module Xcom =
+
+    type ServerMsg =
+        | Hallo
+        | Tschau
+
+    type ClientMsg =
+        | HalloAuch of string
+        | TschauAuch
+
 module Model =
 
     [<Struct>]

@@ -24,7 +24,8 @@ type AuthenticationOptions() =
 
 type AuthenticationState =
     private
-        { BackChannel: HttpClient
+        { HttpContext: HttpContext
+          BackChannel: HttpClient
           BaseUri: Uri
           Options: AuthenticationOptions
           User: ClaimsPrincipal
@@ -70,8 +71,7 @@ module VatsimConnect =
 
     let signIn state (ctx: HttpContext) =
         if state.User.Identity.IsAuthenticated then
-            let svc = ctx.GetService<IAuthenticationService>()
-            svc.SignInAsync(ctx, CookieAuthenticationDefaults.AuthenticationScheme, state.User, state.Properties)
+            ctx.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, state.User, state.Properties)
         else
             failwith "User is not authenticated"
 
@@ -100,7 +100,8 @@ let getState (ctx: HttpContext) =
 
     let baseUri = Uri($"{ctx.Request.Scheme}://{ctx.Request.Host.ToUriComponent()}")
 
-    { BackChannel = client
+    { HttpContext = ctx
+      BackChannel = client
       BaseUri = baseUri
       Options = options
       User = auth.Principal
@@ -165,22 +166,29 @@ let authorize code state =
                   Claim(ClaimTypes.Name, userInfo.data.personal.name_full)
                   Claim(ClaimTypes.GivenName, userInfo.data.personal.name_first)
                   Claim(ClaimTypes.Surname, userInfo.data.personal.name_last) ],
-                "VatsimConnect"
+                CookieAuthenticationDefaults.AuthenticationScheme
             )
 
         let principal = ClaimsPrincipal(identity)
-        let properties = AuthenticationProperties()
-        properties.ExpiresUtc <- expires.ToUniversalTime()
+        let properties =
+            AuthenticationProperties(
+                ExpiresUtc = expires.ToUniversalTime(),
+                IsPersistent = true,
+                AllowRefresh = true)
 
         properties.StoreTokens(
             [ AuthenticationToken(Name = accessTokenName, Value = token.access_token)
               AuthenticationToken(Name = refreshTokenName, Value = (token.refresh_token |> Option.defaultValue "")) ]
         )
 
-        return
+        let newState =
             { state with
                   User = principal
                   Properties = properties }
+
+        do! signIn newState state.HttpContext
+
+        return newState
     }
 
 let getAuthConfig (state: AuthenticationState) =

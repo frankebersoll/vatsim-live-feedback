@@ -4,8 +4,9 @@
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Helpers.fs" />
-    <Compile Include="Shared.fs" />
+      <None Include="paket.references" />
+      <Compile Include="Helpers.fs" />
+      <Compile Include="Shared.fs" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

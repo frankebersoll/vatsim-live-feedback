@@ -6,8 +6,14 @@ module.exports = function (app)  {
             target: "http://localhost:8085/"
         })
     );
-    app.use((req, res, next) =>{
+    app.use(
+        createProxyMiddleware("/socket", {
+            target: "http://localhost:8085/",
+            ws: true
+        })
+    );
+    app.use((req, res, next) => {
         res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
         next();
-    })
+    });
 }

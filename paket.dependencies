@@ -5,11 +5,8 @@ storage: none
 nuget FSharp.Core < 6.0
 nuget FSharp.Data
 
-nuget Fable.Remoting.Giraffe
 nuget FsToolkit.ErrorHandling
-nuget Microsoft.NET.Test.Sdk
 nuget Saturn
-nuget Expecto
 
 nuget Fable.Core
 nuget Fable.Elmish
@@ -19,12 +16,19 @@ nuget Fable.Elmish.HMR
 nuget Fable.Mocha
 nuget Fable.React
 nuget Fable.Remoting.Client
+nuget Fable.Remoting.Giraffe
+
+nuget Elmish.Bridge.Client
+nuget Elmish.Bridge.Giraffe
+
 nuget Feliz
 nuget Feliz.Bulma
 nuget Feliz.Router
-nuget Fulma
 
 nuget Fake.Core.Target
 nuget Fake.IO.FileSystem
 nuget Farmer
+
+nuget Microsoft.NET.Test.Sdk
+nuget Expecto
 nuget YoloDev.Expecto.TestSdk

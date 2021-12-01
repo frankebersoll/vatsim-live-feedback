@@ -2,7 +2,7 @@ module Client.App
 
 open Elmish
 open Elmish.React
-
+open Elmish.Bridge
 
 #if DEBUG
 open Elmish.HMR
@@ -21,7 +21,16 @@ Lib.CookieConsent.run (
        website_privacy_policy_url = privacyUrl |}
 )
 
-Program.mkProgram Index.init Index.update Index.MainView
+let bridgeConfig =
+    Bridge.endpoint "/socket"
+    |> Bridge.withMapping (function
+                | Shared.Xcom.HalloAuch name -> Model.Msg.UnhandledError (exn ("Hallo" + name))
+                | Shared.Xcom.TschauAuch -> Model.Msg.UnhandledError (exn "TschauAuch"))
+    |> Bridge.withWhenDown (Model.Msg.UnhandledError (exn "OHA!"))
+
+let bridgeSub = bridgeConfig |> Bridge.asSubscription |> Cmd.ofSub
+
+Program.mkProgram Index.init (Index.update bridgeSub) Index.MainView
 #if DEBUG
 |> Program.withConsoleTrace
 #endif

@@ -29,7 +29,7 @@ let init () : Model * Cmd<Msg> =
 
     onPageChanged model page
 
-let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
+let update (startBridgeCmd: Cmd<Msg>) (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     match msg with
     | SignIn -> { model with Authentication = Authenticating }, Auth.navigateToAuthCmd ()
     | Authenticated user ->
@@ -62,6 +62,9 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
               Message = None },
         Cmd.none
     | SetCallSign ->
+        if model.Input = "GO" then
+            model, startBridgeCmd
+        else
         if
             System.String.IsNullOrWhiteSpace(model.Input)
             |> not

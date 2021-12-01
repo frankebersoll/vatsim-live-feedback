@@ -1,3 +1,5 @@
 Saturn
 Fable.Remoting.Giraffe
 FSharp.Data
+Elmish.Bridge.Giraffe
+FsToolkit.ErrorHandling
